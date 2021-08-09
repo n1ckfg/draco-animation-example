@@ -1,120 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<title>three.js webgl - loaders - Draco loader</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	<link type="text/css" rel="stylesheet" href="main.css">
-</head>
 
-<body>
-	<div id="container"></div>
-	<div id="info">
-		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> -
-		<a href="https://github.com/google/draco" target="_blank" rel="noopener">DRACO</a> loader
-	</div>
+	<head>
+		<title>Draco Animation Example</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background: black;
+				margin: 0px;
+				overflow: hidden;
+			}
+			
+			* {
+				cursor: none;
+			}
+		</style>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/three.min.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/loaders/GLTFLoader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/loaders/DRACOLoader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/shaders/CopyShader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/shaders/LuminosityHighPassShader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/EffectComposer.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/ShaderPass.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/RenderPass.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/UnrealBloomPass.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/general-util.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-util.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-wasd.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-mouse.js"></script>
+	</head>
 
-	<script type="module">
-		import * as THREE from '../build/three.module.js';
+	<body>
+		<script>
+			"use strict";
 
-		import { DRACOLoader } from './jsm/loaders/DRACOLoader.js';
+			const renderer = new THREE.WebGLRenderer({ antialiasing: false, alpha: false });
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setClearColor(0x000000);
 
-		let camera, scene, renderer;
+			const exposure = 1.2;
+			renderer.toneMapping = THREE.ReinhardToneMapping;
+			renderer.toneMappingExposure = Math.pow(exposure, 4.0);
 
-		const container = document.querySelector( '#container' );
+			renderer.autoClear = false;
+			document.body.appendChild(renderer.domElement);
 
-		// Configure and create Draco decoder.
-		const dracoLoader = new DRACOLoader();
-		dracoLoader.setDecoderPath( 'js/libs/draco/' );
-		dracoLoader.setDecoderConfig( { type: 'js' } );
+			const cameraFov = 60;
+			const cameraAspect = window.innerWidth / window.innerHeight;
+			const cameraNear = 1;
+			const cameraFar = 1000;
 
-		init();
-		animate();
+			const camera = new THREE.PerspectiveCamera(cameraFov, cameraAspect, cameraNear, cameraFar);
+			resetCameraPosition();
 
-		function init() {
+			let armRegenerate = false;
+			let armRedmat = false;
+			let armRegenerateIndex = 0;
 
-			camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.1, 15 );
-			camera.position.set( 3, 0.25, 3 );
+			const clock = new THREE.Clock();
 
-			scene = new THREE.Scene();
-			scene.background = new THREE.Color( 0x443333 );
-			scene.fog = new THREE.Fog( 0x443333, 1, 4 );
+			const scene = new THREE.Scene();
+			const fogColor = 0x000000;
+			const fogDensity = 0.00375;
+			scene.fog = new THREE.FogExp2(fogColor, fogDensity);
+			scene.background = new THREE.Color("#000000");  
 
-			// Ground
-			const plane = new THREE.Mesh(
-				new THREE.PlaneGeometry( 8, 8 ),
-				new THREE.MeshPhongMaterial( { color: 0x999999, specular: 0x101010 } )
-			);
-			plane.rotation.x = - Math.PI / 2;
-			plane.position.y = 0.03;
-			plane.receiveShadow = true;
-			scene.add( plane );
+			const meshLineWidth = 0.6;
+			const meshLineOpacity = 0.1;
+			const meshLineResolution = 1;
 
-			// Lights
-			const hemiLight = new THREE.HemisphereLight( 0x443333, 0x111122 );
-			scene.add( hemiLight );
+			const mat1 = new THREE.LineBasicMaterial({ color: 0xaaffff });
 
-			const spotLight = new THREE.SpotLight();
-			spotLight.angle = Math.PI / 16;
-			spotLight.penumbra = 0.5;
-			spotLight.castShadow = true;
-			spotLight.position.set( - 1, 1, 1 );
-			scene.add( spotLight );
+			const globalScale = new THREE.Vector3(50, -50, 50);
+			const globalOffset = new THREE.Vector3(-20, 60, -350); 
+			const globalSpeedFactor = 4;
+			const globalSpread = 7;
 
-			dracoLoader.load( 'models/draco/bunny.drc', function ( geometry ) {
+			const axisX = new THREE.Vector3(1, 0, 0);
+			const axisY = new THREE.Vector3(0, 1, 0);
+			const axisZ = new THREE.Vector3(0, 0, 1);
 
-				geometry.computeVertexNormals();
+			const triggerDistance = 35;
 
-				const material = new THREE.MeshStandardMaterial( { color: 0x606060 } );
-				const mesh = new THREE.Mesh( geometry, material );
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
-				scene.add( mesh );
+			movingSpeedMax = 1.3;
+			movingDelta = 0.03;
 
-				// Release decoder resources.
-				dracoLoader.dispose();
+			let now = 0;
 
-			} );
+			const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+			bloomPass.threshold = 0; //0;
+			bloomPass.strength = 6; //1.5;
+			bloomPass.radius = 0.8; //0.8
 
-			// renderer
-			renderer = new THREE.WebGLRenderer( { antialias: true } );
-			renderer.setPixelRatio( window.devicePixelRatio );
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			renderer.outputEncoding = THREE.sRGBEncoding;
-			renderer.shadowMap.enabled = true;
-			container.appendChild( renderer.domElement );
+			const renderPass = new THREE.RenderPass(scene, camera);
 
-			window.addEventListener( 'resize', onWindowResize );
+			const composer = new THREE.EffectComposer(renderer);
+			composer.addPass(renderPass);
+			composer.addPass(bloomPass);
 
-		}
+			// Configure and create Draco decoder.
+			const loader = new THREE.GLTFLoader();
+			const dracoLoader = new THREE.DRACOLoader();
+			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
+			loader.setDRACOLoader(dracoLoader);
 
-		function onWindowResize() {
+			function init() {
+				loader.load("files/draco-demo.glb", function(gltf) {
+					// gltf.animations; // Array<THREE.AnimationClip>
+					// gltf.scene; // THREE.Group
+					// gltf.scenes; // Array<THREE.Group>
+					// gltf.cameras; // Array<THREE.Camera>
+					// gltf.asset; // Object
+					console.log(gltf.scene.children);
+					scene.add(gltf.scene);
+				});
 
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
+				setupWasd();
+				setupMouse();
+				draw();
+			}
 
-			renderer.setSize( window.innerWidth, window.innerHeight );
+			function draw() {
+				updateWasd();
 
-		}
+				composer.render();
 
-		function animate() {
+				requestAnimationFrame(draw);
+			}
 
-			render();
-			requestAnimationFrame( animate );
+			window.onload = init;
+		</script>
+	</body>
 
-		}
-
-		function render() {
-
-			const timer = Date.now() * 0.0003;
-
-			camera.position.x = Math.sin( timer ) * 0.5;
-			camera.position.z = Math.cos( timer ) * 0.5;
-			camera.lookAt( 0, 0.1, 0 );
-
-			renderer.render( scene, camera );
-
-		}
-	</script>
-</body>
 </html>
