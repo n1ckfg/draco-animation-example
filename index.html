@@ -55,39 +55,13 @@
 			const camera = new THREE.PerspectiveCamera(cameraFov, cameraAspect, cameraNear, cameraFar);
 			resetCameraPosition();
 
-			let armRegenerate = false;
-			let armRedmat = false;
-			let armRegenerateIndex = 0;
-
 			const clock = new THREE.Clock();
 
 			const scene = new THREE.Scene();
-			const fogColor = 0x000000;
-			const fogDensity = 0.00375;
-			scene.fog = new THREE.FogExp2(fogColor, fogDensity);
+			//const fogColor = 0x000000;
+			//const fogDensity = 0.00375;
+			//scene.fog = new THREE.FogExp2(fogColor, fogDensity);
 			scene.background = new THREE.Color("#000000");  
-
-			const meshLineWidth = 0.6;
-			const meshLineOpacity = 0.1;
-			const meshLineResolution = 1;
-
-			const mat1 = new THREE.LineBasicMaterial({ color: 0xaaffff });
-
-			const globalScale = new THREE.Vector3(50, -50, 50);
-			const globalOffset = new THREE.Vector3(-20, 60, -350); 
-			const globalSpeedFactor = 4;
-			const globalSpread = 7;
-
-			const axisX = new THREE.Vector3(1, 0, 0);
-			const axisY = new THREE.Vector3(0, 1, 0);
-			const axisZ = new THREE.Vector3(0, 0, 1);
-
-			const triggerDistance = 35;
-
-			movingSpeedMax = 1.3;
-			movingDelta = 0.03;
-
-			let now = 0;
 
 			const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
 			bloomPass.threshold = 0; //0;
@@ -102,20 +76,24 @@
 
 			// Configure and create Draco decoder.
 			const loader = new THREE.GLTFLoader();
+			let mixer;
 			const dracoLoader = new THREE.DRACOLoader();
 			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
 			loader.setDRACOLoader(dracoLoader);
 
 			function init() {
-				loader.load("files/draco-demo.glb", function(gltf) {
+				loader.load("./files/draco-demo.glb", function(gltf) {
 					// gltf.animations; // Array<THREE.AnimationClip>
 					// gltf.scene; // THREE.Group
 					// gltf.scenes; // Array<THREE.Group>
 					// gltf.cameras; // Array<THREE.Camera>
 					// gltf.asset; // Object
-					console.log(gltf.scene.children);
-					scene.add(gltf.scene);
-				});
+			        scene.add(gltf.scene);
+			        mixer = new THREE.AnimationMixer(gltf.scene);
+			        gltf.animations.forEach((clip) => {
+			            mixer.clipAction(clip).play();
+			        });
+        		});
 
 				setupWasd();
 				setupMouse();
