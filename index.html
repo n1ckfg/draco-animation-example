@@ -40,7 +40,7 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setClearColor(0x000000);
 
-			const exposure = 1.2;
+			const exposure = 2.2;
 			renderer.toneMapping = THREE.ReinhardToneMapping;
 			renderer.toneMappingExposure = Math.pow(exposure, 4.0);
 
@@ -49,7 +49,7 @@
 
 			const cameraFov = 60;
 			const cameraAspect = window.innerWidth / window.innerHeight;
-			const cameraNear = 1;
+			const cameraNear = 0.01;
 			const cameraFar = 1000;
 
 			const camera = new THREE.PerspectiveCamera(cameraFov, cameraAspect, cameraNear, cameraFar);
@@ -76,10 +76,14 @@
 
 			// Configure and create Draco decoder.
 			const loader = new THREE.GLTFLoader();
-			let mixer;
 			const dracoLoader = new THREE.DRACOLoader();
 			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
 			loader.setDRACOLoader(dracoLoader);
+
+			let mixer;
+			const root = new THREE.Object3D();
+			let delta = 0;
+			let interval = 1/12;
 
 			function init() {
 				loader.load("./files/draco-demo.glb", function(gltf) {
@@ -88,12 +92,31 @@
 					// gltf.scenes; // Array<THREE.Group>
 					// gltf.cameras; // Array<THREE.Camera>
 					// gltf.asset; // Object
-			        scene.add(gltf.scene);
+			        
+			        scene.add(root);	
+					scene.add(gltf.scene);
+
+			        gltf.scene.parent = root;
+
+					const scaler = 1;
+					root.scale.set(scaler, scaler, scaler);
+					root.position.set(0, 0, -50);
+
+
+					//const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });		        
+			        //gltf.scene.children.forEach((child) => {
+			            //child.material = material;
+			        //});
+
 			        mixer = new THREE.AnimationMixer(gltf.scene);
+
 			        gltf.animations.forEach((clip) => {
 			            mixer.clipAction(clip).play();
 			        });
-        		});
+
+					const light = new THREE.AmbientLight(0x404040); // soft white light
+					scene.add(light);
+			    });
 
 				setupWasd();
 				setupMouse();
@@ -102,6 +125,12 @@
 
 			function draw() {
 				updateWasd();
+
+				delta += clock.getDelta();
+				if (mixer && delta > interval) {
+					mixer.update(delta);
+					delta = delta % interval;
+				}
 
 				composer.render();
 
