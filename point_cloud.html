@@ -35,7 +35,7 @@
 			
 			void main() {
 				vColor = color;
-				gl_PointSize = 10.0;
+				gl_PointSize = 4.0;
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 			}
 		</script>
@@ -44,7 +44,7 @@
 			varying vec3 vColor;
 
 			void main() {
-				gl_FragColor = vec4(vColor.rgb, 0.5);
+				gl_FragColor = vec4(vColor.rgb, 0.1);
 			}
 		</script>
 	</head>
@@ -98,10 +98,7 @@
 			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
 			loader.setDRACOLoader(dracoLoader);
 
-			let model, mixer, mesh;
-			const root = new THREE.Object3D();
-			let delta = 0;
-			const interval = 1/12;
+			let model, mesh;
 
 			// point cloud material
 			const shaderMaterial = new THREE.ShaderMaterial( {
@@ -110,8 +107,6 @@
 				fragmentShader: document.getElementById("fragmentshader").textContent,
 				transparent: true
 			});
-
-			const material = new THREE.PointsMaterial({ color: new THREE.Color(0.01, 0.01, 0.01), size: 1.25 })
 
 			function init() {
 				loader.load("./files/draco-demo.glb", function(gltf) {
@@ -122,24 +117,12 @@
 					// gltf.asset; // Object
 			        
 			        model = gltf.scene;
-			        scene.add(root);	
-					//scene.add(model);
-
-			        model.parent = root;
-
-					const scaler = 1;
-					root.scale.set(scaler, scaler, scaler);
-					root.position.set(-4.5, -5, -50);
-				
+			
 			        model.traverse((child) => {
-						if (child.isMesh) child.material = material;
+						mesh = new THREE.Points(child.geometry, shaderMaterial);
+						scene.add(mesh);
+						mesh.position.set(-4.5, -5, -50);
 					});
-
-			        mixer = new THREE.AnimationMixer(model);
-
-			        gltf.animations.forEach((clip) => {
-			            mixer.clipAction(clip).play();
-			        });
 
 					const light = new THREE.AmbientLight(0x404040); // soft white light
 					scene.add(light);
@@ -152,21 +135,6 @@
 
 			function draw() {
 				updateWasd();
-
-				delta += clock.getDelta();
-				if (mixer && delta > interval) {
-
-					clearScene();
-			        model.traverse((child) => {
-						if (child.isMesh) {
-							mesh = new THREE.Points(child.geometry, shaderMaterial);
-							scene.add(mesh);
-						}
-					});
-
-					mixer.update(delta);
-					delta = delta % interval;
-				}
 
 				composer.render();
 
