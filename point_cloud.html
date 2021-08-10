@@ -35,7 +35,7 @@
 			
 			void main() {
 				vColor = color;
-				gl_PointSize = 2.0;
+				gl_PointSize = 10.0;
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 			}
 		</script>
@@ -98,7 +98,7 @@
 			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
 			loader.setDRACOLoader(dracoLoader);
 
-			let mixer;
+			let model, mixer, mesh;
 			const root = new THREE.Object3D();
 			let delta = 0;
 			const interval = 1/12;
@@ -111,6 +111,8 @@
 				transparent: true
 			});
 
+			const material = new THREE.PointsMaterial({ color: new THREE.Color(0.01, 0.01, 0.01), size: 1.25 })
+
 			function init() {
 				loader.load("./files/draco-demo.glb", function(gltf) {
 					// gltf.animations; // Array<THREE.AnimationClip>
@@ -119,20 +121,21 @@
 					// gltf.cameras; // Array<THREE.Camera>
 					// gltf.asset; // Object
 			        
+			        model = gltf.scene;
 			        scene.add(root);	
-					scene.add(gltf.scene);
+					//scene.add(model);
 
-			        gltf.scene.parent = root;
+			        model.parent = root;
 
 					const scaler = 1;
 					root.scale.set(scaler, scaler, scaler);
 					root.position.set(-4.5, -5, -50);
 				
-			        gltf.scene.traverse((child) => {
-						if (child.isMesh) child.material = shaderMaterial;
+			        model.traverse((child) => {
+						if (child.isMesh) child.material = material;
 					});
 
-			        mixer = new THREE.AnimationMixer(gltf.scene);
+			        mixer = new THREE.AnimationMixer(model);
 
 			        gltf.animations.forEach((clip) => {
 			            mixer.clipAction(clip).play();
@@ -152,6 +155,15 @@
 
 				delta += clock.getDelta();
 				if (mixer && delta > interval) {
+
+					clearScene();
+			        model.traverse((child) => {
+						if (child.isMesh) {
+							mesh = new THREE.Points(child.geometry, shaderMaterial);
+							scene.add(mesh);
+						}
+					});
+
 					mixer.update(delta);
 					delta = delta % interval;
 				}
