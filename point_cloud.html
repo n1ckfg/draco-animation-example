@@ -98,6 +98,9 @@
 				transparent: true
 			});
 
+			const light = new THREE.AmbientLight(0x404040); // soft white light
+			scene.add(light);
+					
 			function init() {
 				loader.load("./files/draco-demo.glb", function(gltf) {
 					// gltf.animations; // Array<THREE.AnimationClip>
@@ -113,9 +116,6 @@
 						scene.add(mesh);
 						mesh.position.set(-4.5, -5, -50);
 					});
-
-					const light = new THREE.AmbientLight(0x404040); // soft white light
-					scene.add(light);
 			    });
 
 				setupWasd();

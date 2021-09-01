@@ -96,6 +96,9 @@
 				transparent: true
 			});
 
+			const light = new THREE.AmbientLight(0x404040); // soft white light
+			scene.add(light);
+					
 			const material = new THREE.MeshStandardMaterial({ wireframe: true, color: new THREE.Color(0.1, 0.01, 0, 1.0) });
 
 			let mixer;
@@ -129,9 +132,6 @@
 			        gltf.animations.forEach((clip) => {
 			            mixer.clipAction(clip).play();
 			        });
-
-					const light = new THREE.AmbientLight(0x404040); // soft white light
-					scene.add(light);
 			    });
 
 				setupWasd();

@@ -19,24 +19,6 @@
 		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-util.js"></script>
 		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-wasd.js"></script>
 		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-mouse.js"></script>
-
-		<script type='x-shader/x-vertex' id='vertexshader'>
-			varying vec3 vColor;
-			
-			void main() {
-				vColor = color;
-				gl_PointSize = 4.0;
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-			}
-		</script>
-
-		<script type='x-shader/x-fragment' id='fragmentshader'>
-			varying vec3 vColor;
-
-			void main() {
-				gl_FragColor = vec4(vColor.rgb, 0.1);
-			}
-		</script>
 	</head>
 
 	<body>
@@ -48,7 +30,7 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setClearColor(0x000000);
 
-			const exposure = 2.2;
+			const exposure = 1.2;
 			renderer.toneMapping = THREE.ReinhardToneMapping;
 			renderer.toneMappingExposure = Math.pow(exposure, 4.0);
 
@@ -72,8 +54,8 @@
 			scene.background = new THREE.Color("#000000");  
 
 			const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-			bloomPass.threshold = 0; //0;
-			bloomPass.strength = 6; //1.5;
+			bloomPass.threshold = 0.1; //0;
+			bloomPass.strength = 1.5; //1.5;
 			bloomPass.radius = 0.8; //0.8
 
 			const renderPass = new THREE.RenderPass(scene, camera);
@@ -83,39 +65,27 @@
 			composer.addPass(bloomPass);
 
 			// Configure and create Draco decoder.
-			const loader = new THREE.GLTFLoader();
 			const dracoLoader = new THREE.DRACOLoader();
 			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
-			loader.setDRACOLoader(dracoLoader);
 
 			let model, mesh;
 
 			// point cloud material
-			const shaderMaterial = new THREE.ShaderMaterial( {
-				vertexShader: document.getElementById("vertexshader").textContent,
-	            vertexColors: THREE.VertexColors,
-				fragmentShader: document.getElementById("fragmentshader").textContent,
-				transparent: true
+			const material = new THREE.PointsMaterial({
+				vertexColors: THREE.VertexColors,
+				color: new THREE.Color(0.2, 0.2, 0.2),
+				size: 0.1
 			});
 
-			function init() {
-				loader.load("./files/draco-demo.glb", function(gltf) {
-					// gltf.animations; // Array<THREE.AnimationClip>
-					// gltf.scene; // THREE.Group
-					// gltf.scenes; // Array<THREE.Group>
-					// gltf.cameras; // Array<THREE.Camera>
-					// gltf.asset; // Object
-			        
-			        model = gltf.scene;
-			
-			        model.traverse((child) => {
-						mesh = new THREE.Points(child.geometry, shaderMaterial);
-						scene.add(mesh);
-						mesh.position.set(-4.5, -5, -50);
-					});
+			const light = new THREE.AmbientLight(0x404040); // soft white light
+			scene.add(light);
 
-					const light = new THREE.AmbientLight(0x404040); // soft white light
-					scene.add(light);
+			function init() {
+				dracoLoader.load("./files/cherry_blossom_jail.drc", function(obj) {		        
+					mesh = new THREE.Points(obj, material);
+					scene.add(mesh);
+					mesh.rotation.set(-0.5, -0.1, 0);
+					mesh.position.set(-4.5, 0, -5);
 			    });
 
 				setupWasd();

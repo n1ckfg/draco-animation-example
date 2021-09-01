@@ -96,6 +96,9 @@
 				transparent: false
 			});
 
+			const light = new THREE.AmbientLight(new THREE.Color(0.1, 0.1, 0.1)); // soft white light
+			scene.add(light);
+					
 			let mixer;
 			const root = new THREE.Object3D();
 			let delta = 0;
@@ -127,9 +130,6 @@
 			        gltf.animations.forEach((clip) => {
 			            mixer.clipAction(clip).play();
 			        });
-
-					const light = new THREE.AmbientLight(new THREE.Color(0.1, 0.1, 0.1)); // soft white light
-					scene.add(light);
 			    });
 
 				setupWasd();
