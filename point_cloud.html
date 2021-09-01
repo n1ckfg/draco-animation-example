@@ -93,8 +93,6 @@
 				vertexShader: document.getElementById("vertexshader").textContent,
 	            vertexColors: THREE.VertexColors,
 				fragmentShader: document.getElementById("fragmentshader").textContent,
-				transparent: true,
-				wireframe: true
 			});
 
 			const light = new THREE.AmbientLight(0x404040); // soft white light
@@ -124,7 +122,8 @@
 
 			        scene.traverse((child) => {
 			            if (child.isMesh) {
-			            	child.material = shaderMaterial;
+			            	child.geometry.index = null;
+			            	child = new THREE.Points(child.geometry, shaderMaterial);
 			        	}
 			        });
 
