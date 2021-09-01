@@ -70,6 +70,9 @@
 			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
 			loader.setDRACOLoader(dracoLoader);
 
+			const light = new THREE.AmbientLight(0x404040); // soft white light
+			scene.add(light);
+					
 			let mixer;
 			const root = new THREE.Object3D();
 			let delta = 0;
@@ -103,9 +106,6 @@
 			        gltf.animations.forEach((clip) => {
 			            mixer.clipAction(clip).play();
 			        });
-
-					const light = new THREE.AmbientLight(0x404040); // soft white light
-					scene.add(light);
 			    });
 
 				setupWasd();
