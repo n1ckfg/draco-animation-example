@@ -25,7 +25,7 @@
 			
 			void main() {
 				vColor = color;
-				gl_PointSize = 2.0;
+				gl_PointSize = 6.0;
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 			}
 		</script>
@@ -122,8 +122,8 @@
 
 			        group.traverse((child) => {
 			        	if (child.type === "Mesh") {
-		        			child = new THREE.Points(child.geometry, shaderMaterial);
-		        			child.material = shaderMaterial;
+		        			const newChild = new THREE.Points(child.geometry, shaderMaterial);
+		        			child.add(newChild);
 		        		}
 			        });
 
