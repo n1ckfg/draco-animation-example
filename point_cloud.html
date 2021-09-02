@@ -25,7 +25,7 @@
 			
 			void main() {
 				vColor = color;
-				gl_PointSize = 6.0;
+				gl_PointSize = 2.0;
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 			}
 		</script>
@@ -93,6 +93,7 @@
 				vertexShader: document.getElementById("vertexshader").textContent,
 	            vertexColors: THREE.VertexColors,
 				fragmentShader: document.getElementById("fragmentshader").textContent,
+				transparent: false
 			});
 
 			const light = new THREE.AmbientLight(0x404040); // soft white light
@@ -124,6 +125,7 @@
 			        	if (child.type === "Mesh") {
 		        			const newChild = new THREE.Points(child.geometry, shaderMaterial);
 		        			child.add(newChild);
+		        			child.material.visible = false;
 		        		}
 			        });
 
