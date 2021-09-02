@@ -98,11 +98,11 @@
 			const light = new THREE.AmbientLight(0x404040); // soft white light
 			scene.add(light);
 					
-			let oldMixer, mixer;
+			let group, mixer;
 			const root = new THREE.Object3D();
 			let delta = 0;
 			let interval = 1/12;
-
+			
 			function init() {
 				loader.load("./files/draco-demo.glb", function(gltf) {
 					// gltf.animations; // Array<THREE.AnimationClip>
@@ -113,15 +113,12 @@
 			        
 			        scene.add(root);
 
-			        const group = new THREE.Group();
-
-			        // https://medium.com/fink-it/duplicating-an-animation-in-three-js-4bb1a01483cf
+			        group = new THREE.Group();
 			        group.animations = gltf.animations;
 
 			        gltf.scene.traverse((child) => {
 						const newChild = new THREE.Points(child.geometry, shaderMaterial);
 						newChild.name = child.name;
-						newChild.animations = child.animations;
 	            		group.add(newChild);
 			        });
 
