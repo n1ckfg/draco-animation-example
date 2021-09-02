@@ -25,7 +25,7 @@
 			
 			void main() {
 				vColor = color;
-				gl_PointSize = 2.0;
+				gl_PointSize = 4.0;
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 			}
 		</script>
@@ -34,7 +34,7 @@
 			varying vec3 vColor;
 
 			void main() {
-				gl_FragColor = vec4(vColor.rgb, 0.9);
+				gl_FragColor = vec4(vColor.rgb, 0.5);
 			}
 		</script>
 	</head>
@@ -93,7 +93,7 @@
 				vertexShader: document.getElementById("vertexshader").textContent,
 	            vertexColors: THREE.VertexColors,
 				fragmentShader: document.getElementById("fragmentshader").textContent,
-				transparent: false
+				transparent: true
 			});
 
 			const light = new THREE.AmbientLight(0x404040); // soft white light
@@ -101,13 +101,8 @@
 					
 			const root = new THREE.Object3D();
 			scene.add(root);
-			const newGltf = new THREE.Group();
-			scene.add(newGltf);
-			let group = new THREE.Group();
-			scene.add(group);
 
-			const mixer = new THREE.AnimationMixer(newGltf);
-
+			let mixer;
 			let delta = 0;
 			let interval = 1/12;
 			
@@ -119,9 +114,7 @@
 					// gltf.cameras; // Array<THREE.Camera>
 					// gltf.asset; // Object
 
-					group = gltf.scene.clone();
-
-			        group.traverse((child) => {
+			        gltf.scene.traverse((child) => {
 			        	if (child.type === "Mesh") {
 		        			const newChild = new THREE.Points(child.geometry, shaderMaterial);
 		        			child.add(newChild);
@@ -129,12 +122,15 @@
 		        		}
 			        });
 
-			        newGltf.add(group);
-			        newGltf.parent = root;
+			        scene.add(gltf.scene);
+
+			        gltf.scene.parent = root;
 
 					const scaler = 1;
 					root.scale.set(scaler, scaler, scaler);
 					root.position.set(-4.5, -5, -50);
+
+					mixer = new THREE.AnimationMixer(gltf.scene);
 
 			        gltf.animations.forEach((clip) => {
 			            mixer.clipAction(clip).play();
