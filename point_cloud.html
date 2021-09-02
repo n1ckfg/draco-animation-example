@@ -25,7 +25,7 @@
 			
 			void main() {
 				vColor = color;
-				gl_PointSize = 1.0;
+				gl_PointSize = 6.0;
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 			}
 		</script>
@@ -48,7 +48,7 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setClearColor(0x000000);
 
-			const exposure = 2.2;
+			const exposure = 1.2;
 			renderer.toneMapping = THREE.ReinhardToneMapping;
 			renderer.toneMappingExposure = Math.pow(exposure, 4.0);
 
@@ -72,8 +72,8 @@
 			scene.background = new THREE.Color("#000000");  
 
 			const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-			bloomPass.threshold = 0; //0;
-			bloomPass.strength = 6; //1.5;
+			bloomPass.threshold = 0.1; //0;
+			bloomPass.strength = 1.5; //1.5;
 			bloomPass.radius = 0.8; //0.8
 
 			const renderPass = new THREE.RenderPass(scene, camera);
@@ -98,7 +98,7 @@
 			const light = new THREE.AmbientLight(0x404040); // soft white light
 			scene.add(light);
 					
-			let mixer;
+			let oldMixer, mixer;
 			const root = new THREE.Object3D();
 			let delta = 0;
 			let interval = 1/12;
@@ -111,25 +111,31 @@
 					// gltf.cameras; // Array<THREE.Camera>
 					// gltf.asset; // Object
 			        
-			        scene.add(root);	
-					scene.add(gltf.scene);
+			        scene.add(root);
 
-			        gltf.scene.parent = root;
+			        const group = new THREE.Group();
+
+			        // https://medium.com/fink-it/duplicating-an-animation-in-three-js-4bb1a01483cf
+			        group.animations = gltf.animations;
+
+			        gltf.scene.traverse((child) => {
+						const newChild = new THREE.Points(child.geometry, shaderMaterial);
+						newChild.name = child.name;
+						newChild.animations = child.animations;
+	            		group.add(newChild);
+			        });
+
+					scene.add(group);
+
+			        group.parent = root;
 
 					const scaler = 1;
 					root.scale.set(scaler, scaler, scaler);
 					root.position.set(-4.5, -5, -50);
 
-			        scene.traverse((child) => {
-			            if (child.isMesh) {
-			            	child.geometry.index = null;
-			            	child = new THREE.Points(child.geometry, shaderMaterial);
-			        	}
-			        });
+			        mixer = new THREE.AnimationMixer(group)
 
-			        mixer = new THREE.AnimationMixer(gltf.scene);
-
-			        gltf.animations.forEach((clip) => {
+			        group.animations.forEach((clip) => {
 			            mixer.clipAction(clip).play();
 			        });
 			    });
