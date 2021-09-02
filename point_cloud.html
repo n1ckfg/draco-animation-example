@@ -102,7 +102,7 @@
 			scene.add(root);
 			const newGltf = new THREE.Group();
 			scene.add(newGltf);
-			const group = new THREE.Group();
+			let group = new THREE.Group();
 			scene.add(group);
 
 			const mixer = new THREE.AnimationMixer(newGltf);
@@ -117,20 +117,14 @@
 					// gltf.scenes; // Array<THREE.Group>
 					// gltf.cameras; // Array<THREE.Camera>
 					// gltf.asset; // Object
-			        
 
-			        gltf.scene.children.forEach((child) => {
+					group = gltf.scene.clone();
+
+			        group.traverse((child) => {
 			        	if (child.type === "Mesh") {
-							const newChild = new THREE.Points(child.geometry, shaderMaterial);
-		            		newChild.name = child.name;
-		            		group.add(newChild);
-		            	} else if (child.type === "Group") {
-		            		child.children.forEach((child2) => {
-								const newChild = new THREE.Points(child2.geometry, shaderMaterial);
-			            		newChild.name = child.name;
-			            		group.add(newChild);		            			
-		            		});
-		            	}
+		        			child = new THREE.Points(child.geometry, shaderMaterial);
+		        			child.material = shaderMaterial;
+		        		}
 			        });
 
 			        newGltf.add(group);
