@@ -118,6 +118,9 @@
 			        	if (child.type === "Mesh") {
 		        			const newChild = new THREE.Points(child.geometry, shaderMaterial);
 		        			child.add(newChild);
+		        			// we can't get rid of the child object without breaking the animation hierarchy,
+		        			// but we can get rid of its geometry
+		        			child.geometry = new THREE.BufferGeometry();
 		        			child.material.visible = false;
 		        		}
 			        });
