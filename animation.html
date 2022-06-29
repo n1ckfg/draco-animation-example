@@ -2,7 +2,7 @@
 <html lang="en">
 
 	<head>
-		<title>Draco Volumetric Example 3</title>
+		<title>Draco Animation Example 1</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="./css/main.css">
@@ -19,24 +19,6 @@
 		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-util.js"></script>
 		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-wasd.js"></script>
 		<script src="https://fox-gieg.com/js/libraries/utiljs/1.0.0/threejs-mouse.js"></script>
-
-		<script type='x-shader/x-vertex' id='vertexshader'>
-			varying vec3 vColor;
-			
-			void main() {
-				vColor = color;
-				gl_PointSize = 1.0;
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-			}
-		</script>
-
-		<script type='x-shader/x-fragment' id='fragmentshader'>
-			varying vec3 vColor;
-
-			void main() {
-				gl_FragColor = vec4(vColor.rgb, 1.0);
-			}
-		</script>
 	</head>
 
 	<body>
@@ -48,7 +30,7 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setClearColor(0x000000);
 
-			const exposure = 1.2;
+			const exposure = 2.2;
 			renderer.toneMapping = THREE.ReinhardToneMapping;
 			renderer.toneMappingExposure = Math.pow(exposure, 4.0);
 
@@ -72,8 +54,8 @@
 			scene.background = new THREE.Color("#000000");  
 
 			const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-			bloomPass.threshold = 0.1; //0;
-			bloomPass.strength = 0.8; //1.5;
+			bloomPass.threshold = 0; //0;
+			bloomPass.strength = 6; //1.5;
 			bloomPass.radius = 0.8; //0.8
 
 			const renderPass = new THREE.RenderPass(scene, camera);
@@ -88,15 +70,7 @@
 			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
 			loader.setDRACOLoader(dracoLoader);
 
-			// point cloud material
-			const shaderMaterial = new THREE.ShaderMaterial( {
-				vertexShader: document.getElementById("vertexshader").textContent,
-	            vertexColors: THREE.VertexColors,
-				fragmentShader: document.getElementById("fragmentshader").textContent,
-				transparent: false
-			});
-
-			const light = new THREE.AmbientLight(new THREE.Color(0.1, 0.1, 0.1)); // soft white light
+			const light = new THREE.AmbientLight(0x404040); // soft white light
 			scene.add(light);
 					
 			let mixer;
@@ -105,7 +79,7 @@
 			let interval = 1/12;
 
 			function init() {
-				loader.load("./files/new-mesh.glb", function(gltf) {
+				loader.load("./files/draco-demo.glb", function(gltf) {
 					// gltf.animations; // Array<THREE.AnimationClip>
 					// gltf.scene; // THREE.Group
 					// gltf.scenes; // Array<THREE.Group>
@@ -117,14 +91,15 @@
 
 			        gltf.scene.parent = root;
 
-					const scaler = 8;
+					const scaler = 1;
 					root.scale.set(scaler, scaler, scaler);
-					root.position.set(0, -2, -15);
-					root.rotation.set(0, Math.PI, 0);
+					root.position.set(-4.5, -5, -50);
 
-			        gltf.scene.children.forEach((child) => {
-			            child.material = shaderMaterial;
-			        });
+
+					//const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });		        
+			        //gltf.scene.children.forEach((child) => {
+			            //child.material = material;
+			        //});
 
 			        mixer = new THREE.AnimationMixer(gltf.scene);
 
